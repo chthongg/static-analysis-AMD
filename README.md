@@ -32,8 +32,13 @@ python run_webapp.py
 Open: `http://localhost:5001`
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/9106cdd5-bf86-42bd-be93-2756dc5f17b6" width="400" alt="image" />
+  <img src="https://github.com/user-attachments/assets/9106cdd5-bf86-42bd-be93-2756dc5f17b6" width="400" alt="image1" />
+  
+  <br> <img src="https://github.com/user-attachments/assets/08f5b084-26fb-4bfd-9ef5-32859fdd7ea7" width="48%" alt="image2" />
+  <img src="https://github.com/user-attachments/assets/48dd174e-9ea5-4823-a717-156b539cb286" width="48%" alt="image3" />
 </div>
+
+
 
 ## 3) Web App Flow
 
