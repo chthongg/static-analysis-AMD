@@ -31,19 +31,11 @@ python run_webapp.py
 
 Open: `http://localhost:5001`
 
-<table align="center">
-  <tr>
-    <td align="center" width="33.33%">
-      <img src="https://github.com/user-attachments/assets/08f5b084-26fb-4bfd-9ef5-32859fdd7ea7" width="100%" alt="image2" />
-    </td>
-    <td align="center" width="33.33%">
-      <img src="https://github.com/user-attachments/assets/9106cdd5-bf86-42bd-be93-2756dc5f17b6" width="80%" alt="image1" />
-    </td>
-    <td align="center" width="33.33%">
-      <img src="https://github.com/user-attachments/assets/48dd174e-9ea5-4823-a717-156b539cb286" width="100%" alt="image3" />
-    </td>
-  </tr>
-</table>
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/08f5b084-26fb-4bfd-9ef5-32859fdd7ea7" height="300" alt="img1" />
+  <img src="https://github.com/user-attachments/assets/9106cdd5-bf86-42bd-be93-2756dc5f17b6" height="300" alt="img2" />
+  <img src="https://github.com/user-attachments/assets/48dd174e-9ea5-4823-a717-156b539cb286" height="300" alt="img3" />
+</p>
 
 
 
