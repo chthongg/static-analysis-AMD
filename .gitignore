@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Large local artifacts (optional to keep locally)
+*.apk
+

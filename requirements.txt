@@ -1,0 +1,7 @@
+flask>=3.0
+numpy>=1.26
+joblib>=1.4
+scikit-learn>=1.6
+xgboost>=2.0
+androguard>=4.1
+loguru>=0.7

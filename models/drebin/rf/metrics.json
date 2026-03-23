@@ -1,0 +1,10 @@
+{
+  "algorithm": "Random Forest",
+  "accuracy": 0.9828,
+  "f1_weighted": 0.9827,
+  "precision_weighted": 0.9828,
+  "recall_weighted": 0.9828,
+  "mcc": 0.963,
+  "roc_auc": 0.9968,
+  "train_time_s": 11.9
+}

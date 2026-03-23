@@ -1,0 +1,22 @@
+{
+  "best_model": "XGBoost",
+  "n_features_selected": 516,
+  "n_features_total": 50621,
+  "n_samples": 11598,
+  "label_classes": [
+    "Adware",
+    "Banking",
+    "Benign",
+    "Riskware",
+    "SMS"
+  ],
+  "cv_folds": 5,
+  "metrics_best": {
+    "accuracy": 0.9995688911689046,
+    "precision": 0.9995699141581234,
+    "recall": 0.9995688911689046,
+    "f1": 0.999568844641568,
+    "mcc": 0.9994404065411064,
+    "roc_auc": 0.9999996136286254
+  }
+}

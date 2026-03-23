@@ -1,0 +1,15 @@
+{
+  "dataset_key": "drebin",
+  "dataset_label": "Drebin v1",
+  "task": "binary",
+  "best_model": "Random Forest",
+  "algorithms": [
+    "rf",
+    "svm",
+    "knn",
+    "nb",
+    "mlp",
+    "xgb"
+  ]
+}
+

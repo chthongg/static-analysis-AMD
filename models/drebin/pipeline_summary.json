@@ -1,0 +1,66 @@
+{
+  "dataset": "Drebin v1",
+  "task": "binary",
+  "label_classes": [
+    "B",
+    "S"
+  ],
+  "n_samples": 15036,
+  "n_features_original": 215,
+  "n_features_selected": 76,
+  "feature_selection_method": "Two-Stage (Chi-square + Pearson Correlation Filter)",
+  "best_model": "Random Forest",
+  "best_f1_weighted": 0.9827,
+  "cv_folds": 5,
+  "model_results": {
+    "Random Forest": {
+      "accuracy": 0.9828,
+      "f1_weighted": 0.9827,
+      "precision_weighted": 0.9828,
+      "recall_weighted": 0.9828,
+      "mcc": 0.963,
+      "roc_auc": 0.9968
+    },
+    "SVM (Linear)": {
+      "accuracy": 0.9636,
+      "f1_weighted": 0.9636,
+      "precision_weighted": 0.9636,
+      "recall_weighted": 0.9636,
+      "mcc": 0.9218,
+      "roc_auc": 0.9911
+    },
+    "k-NN": {
+      "accuracy": 0.9269,
+      "f1_weighted": 0.9278,
+      "precision_weighted": 0.9359,
+      "recall_weighted": 0.9269,
+      "mcc": 0.8555,
+      "roc_auc": 0.9522
+    },
+    "Naive Bayes": {
+      "accuracy": 0.7819,
+      "f1_weighted": 0.7845,
+      "precision_weighted": 0.8502,
+      "recall_weighted": 0.7819,
+      "mcc": 0.6267,
+      "roc_auc": 0.8599
+    },
+    "MLP (Neural Net)": {
+      "accuracy": 0.9826,
+      "f1_weighted": 0.9826,
+      "precision_weighted": 0.9827,
+      "recall_weighted": 0.9826,
+      "mcc": 0.9627,
+      "roc_auc": 0.9961
+    },
+    "XGBoost": {
+      "accuracy": 0.9794,
+      "f1_weighted": 0.9794,
+      "precision_weighted": 0.9795,
+      "recall_weighted": 0.9794,
+      "mcc": 0.9559,
+      "roc_auc": 0.9967
+    }
+  },
+  "saved_at": "2026-03-23 23:50"
+}

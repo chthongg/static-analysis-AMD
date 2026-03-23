@@ -1,0 +1,15 @@
+{
+  "dataset_key": "maldroid2020",
+  "dataset_label": "CIC-MalDroid 2020 Static",
+  "task": "multiclass",
+  "best_model": "XGBoost",
+  "algorithms": [
+    "rf",
+    "svm",
+    "knn",
+    "nb",
+    "mlp",
+    "xgb"
+  ]
+}
+

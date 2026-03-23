@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Phân tích tĩnh AMD</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box}
+    :root{
+      --bg:#0d1117;--surface:#161b22;--card:#1c2128;--border:#30363d;
+      --text:#e6edf3;--muted:#8b949e;--green:#3fb950;--red:#f85149;
+      --blue:#58a6ff;--yellow:#d29922;--purple:#bc8cff;--orange:#ffa657;
+      --r:10px;
+    }
+    body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI",Arial,sans-serif;line-height:1.5}
+    .wrap{max-width:1120px;margin:0 auto;padding:24px 16px}
+    header{text-align:center;padding:26px 0 22px;border-bottom:1px solid var(--border);margin-bottom:20px}
+    h1{margin:0;font-size:1.8rem}
+    .muted{color:var(--muted)}
+    .chip{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:99px;background:rgba(88,166,255,.2);color:var(--blue);font-size:.7rem;font-weight:700}
+    .sec{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;margin-bottom:18px}
+    .sec-title{font-size:1rem;font-weight:700;margin-bottom:12px}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .grid-4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+    @media(max-width:900px){.grid,.grid-3,.grid-4{grid-template-columns:1fr}}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px}
+    .card.sel{border-color:var(--blue);box-shadow:0 0 0 1px rgba(88,166,255,.35) inset}
+    .card h3,.card h4{margin:0 0 6px 0}
+    .ds-badge,.task-badge,.sev{display:inline-block;font-size:.67rem;font-weight:700;padding:2px 8px;border-radius:999px}
+    .task-binary{background:rgba(63,185,80,.15);color:var(--green)}
+    .task-multiclass{background:rgba(88,166,255,.15);color:var(--blue)}
+    .sev-high{background:rgba(248,81,73,.15);color:var(--red)}
+    .sev-medium{background:rgba(210,153,34,.15);color:var(--yellow)}
+    .sev-low{background:rgba(88,166,255,.15);color:var(--blue)}
+    .kv{width:100%;border-collapse:collapse;font-size:.88rem}
+    .kv td{padding:4px 0;vertical-align:top}
+    .kv td:first-child{color:var(--muted);width:170px}
+    .model-btns{display:flex;flex-wrap:wrap;gap:8px}
+    .model-btn{background:transparent;border:1px solid var(--border);color:var(--text);border-radius:20px;padding:7px 12px;cursor:pointer}
+    .model-btn.sel{border-color:var(--blue);background:rgba(88,166,255,.12)}
+    .drop{border:2px dashed var(--border);border-radius:10px;padding:22px;text-align:center;cursor:pointer;transition:.15s}
+    .drop:hover{border-color:var(--blue);background:rgba(88,166,255,.04)}
+    .btn{padding:8px 14px;border:none;border-radius:8px;background:var(--green);color:#000;font-weight:700;cursor:pointer}
+    .btn.secondary{background:transparent;border:1px solid var(--border);color:var(--text)}
+    .status-ok{color:var(--green)} .status-err{color:var(--red)}
+    .progress-wrap{display:none;margin-top:10px}
+    .progress-meta{display:flex;justify-content:space-between;gap:8px;font-size:.82rem;color:var(--muted);margin-bottom:6px}
+    .progress-track{height:8px;background:var(--border);border-radius:999px;overflow:hidden}
+    .progress-fill{height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--green));transition:width .2s ease}
+    .hist-table{width:100%;border-collapse:collapse;font-size:.83rem}
+    .hist-table th,.hist-table td{padding:8px 6px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+    .hist-table th{color:var(--muted);font-weight:600}
+    .summary{display:flex;gap:14px;flex-wrap:wrap}
+    .pill{padding:3px 8px;border-radius:999px;font-size:.72rem;font-weight:700}
+    .pill.blue{background:rgba(88,166,255,.15);color:var(--blue)}
+    .pill.red{background:rgba(248,81,73,.15);color:var(--red)}
+    .pill.green{background:rgba(63,185,80,.15);color:var(--green)}
+    .pill.yellow{background:rgba(210,153,34,.15);color:var(--yellow)}
+    .pill.purple{background:rgba(188,140,255,.15);color:var(--purple)}
+    .pill.orange{background:rgba(255,166,87,.15);color:var(--orange)}
+    .prob-row{display:flex;align-items:center;gap:8px;margin:6px 0}
+    .bar{flex:1;height:8px;background:var(--border);border-radius:999px;overflow:hidden}
+    .fill{height:100%;background:var(--blue)}
+    .list{display:flex;flex-direction:column;gap:8px}
+    .item{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+    .tab{background:transparent;border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:8px;cursor:pointer}
+    .tab.active{border-color:var(--blue);background:rgba(88,166,255,.12)}
+    .tabc{display:none}.tabc.active{display:block}
+    pre{background:#0b0f14;color:#d8dee9;padding:12px;border-radius:8px;overflow:auto;font-size:.82rem}
+    .file-list{max-height:240px;overflow:auto;font-family:Consolas,monospace;font-size:.78rem}
+    .ftags{display:flex;flex-wrap:wrap;gap:6px}
+    .ftag{background:rgba(88,166,255,.12);border:1px solid rgba(88,166,255,.25);border-radius:6px;padding:3px 8px;color:var(--blue);font-family:Consolas,monospace;font-size:.75rem}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Phát hiện mã độc Android <span class="chip">Phân tích tĩnh</span></h1>
+      <div class="muted">Dashboard dùng model đã huấn luyện sẵn, so sánh 2 pipeline Drebin và CIC-MalDroid2020</div>
+    </header>
+
+    <div class="sec">
+      <div class="sec-title">1. Chọn Dataset</div>
+      <div id="dataset-grid" class="grid"></div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-title">2. Chọn Model</div>
+      <div id="model-grid" class="grid-3"></div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-title">3. Phân tích APK</div>
+      <div id="drop" class="drop">
+        <div style="font-size:1.8rem">📦</div>
+        <div>Kéo thả file <strong>.apk</strong> hoặc click để chọn</div>
+        <div class="muted" style="font-size:.85rem;margin-top:4px">Luồng inference: APK extract → map full feature space → scaler → select features → predict. APK lớn có thể mất vài phút; chi tiết từng bước xem terminal nơi chạy <code>python run_webapp.py</code>.</div>
+      </div>
+      <input id="apk" type="file" accept=".apk" style="display:none" />
+      <div style="display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap">
+        <button id="runBtn" class="btn">Analyze</button>
+        <button id="rerunBtn" class="btn secondary" disabled>Chạy lại với model khác</button>
+        <span id="apkInfo" class="muted"></span>
+        <span id="status" class="muted"></span>
+        <span id="sessionInfo" class="muted"></span>
+      </div>
+      <div id="progressWrap" class="progress-wrap">
+        <div class="progress-meta">
+          <span id="progressText">Đang chờ analyze...</span>
+          <span id="progressPct">0%</span>
+        </div>
+        <div class="progress-track">
+          <div id="progressFill" class="progress-fill"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec" id="resultSec" style="display:none">
+      <div class="sec-title">4. Kết quả</div>
+      <div class="grid">
+        <div class="card">
+          <h3 id="predTitle">Kết luận</h3>
+          <div class="summary" id="summaryPills"></div>
+          <table class="kv" id="predTable"></table>
+        </div>
+        <div class="card">
+          <h3>Thông tin model</h3>
+          <table class="kv" id="modelTable"></table>
+        </div>
+      </div>
+
+      <div class="grid" style="margin-top:12px">
+        <div class="card">
+          <h3>Xác suất lớp</h3>
+          <div id="probList" class="list"></div>
+        </div>
+        <div class="card">
+          <h3>Feature matching</h3>
+          <table class="kv" id="featureTable"></table>
+          <div class="ftags" id="matchedFeatures" style="margin-top:10px"></div>
+        </div>
+      </div>
+
+      <div class="tabs" style="margin-top:16px">
+        <button class="tab active" data-tab="ov">Tổng quan</button>
+        <button class="tab" data-tab="perm">Permissions</button>
+        <button class="tab" data-tab="api">Sensitive APIs</button>
+        <button class="tab" data-tab="comp">Components</button>
+        <button class="tab" data-tab="files">APK Files</button>
+        <button class="tab" data-tab="json">Raw JSON</button>
+      </div>
+
+      <div id="tab-ov" class="tabc active">
+        <div class="grid">
+          <div class="card">
+            <h3>Metadata tĩnh</h3>
+            <table class="kv" id="metaTable"></table>
+          </div>
+          <div class="card">
+            <h3>Dấu hiệu rủi ro</h3>
+            <div id="riskList" class="list"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-perm" class="tabc">
+        <div class="grid">
+          <div class="card">
+            <h3>Quyền nguy hiểm</h3>
+            <div id="permDanger" class="list"></div>
+          </div>
+          <div class="card">
+            <h3>Quyền thông thường</h3>
+            <div id="permNormal" class="list"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-api" class="tabc">
+        <div class="card">
+          <h3>API nhạy cảm</h3>
+          <div id="apiList" class="list"></div>
+        </div>
+      </div>
+
+      <div id="tab-comp" class="tabc">
+        <div class="grid">
+          <div class="card"><h3>Activities</h3><div id="actList" class="list"></div></div>
+          <div class="card"><h3>Services</h3><div id="svcList" class="list"></div></div>
+          <div class="card"><h3>Receivers</h3><div id="rcvList" class="list"></div></div>
+          <div class="card"><h3>Providers</h3><div id="prvList" class="list"></div></div>
+        </div>
+      </div>
+
+      <div id="tab-files" class="tabc">
+        <div class="card">
+          <h3>Danh sách file trong APK</h3>
+          <div id="fileList" class="file-list"></div>
+        </div>
+      </div>
+
+      <div id="tab-json" class="tabc">
+        <pre id="rawJson"></pre>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-title">5. Lịch sử analyze (session)</div>
+      <div class="card">
+        <table class="hist-table">
+          <thead>
+            <tr>
+              <th>Thời gian</th>
+              <th>Dataset</th>
+              <th>Model</th>
+              <th>Kết quả</th>
+              <th>Tổng time</th>
+              <th>Cache APK</th>
+              <th>Trạng thái</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody">
+            <tr><td colspan="7" class="muted">Chưa có lượt analyze nào.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let registry = {};
+    let selectedDatasetKey = null;
+    let selectedAlgoKey = null;
+    let selectedFile = null;
+    let currentAnalyzeSessionId = null;
+    let analyzeHistory = [];
+
+    const datasetGrid = document.getElementById("dataset-grid");
+    const modelGrid = document.getElementById("model-grid");
+    const drop = document.getElementById("drop");
+    const apkInput = document.getElementById("apk");
+    const apkInfo = document.getElementById("apkInfo");
+    const statusEl = document.getElementById("status");
+    const runBtn = document.getElementById("runBtn");
+    const rerunBtn = document.getElementById("rerunBtn");
+    const sessionInfoEl = document.getElementById("sessionInfo");
+    const historyBody = document.getElementById("historyBody");
+    const resultSec = document.getElementById("resultSec");
+    const progressWrap = document.getElementById("progressWrap");
+    const progressText = document.getElementById("progressText");
+    const progressPct = document.getElementById("progressPct");
+    const progressFill = document.getElementById("progressFill");
+
+    function esc(v) {
+      return String(v ?? "").replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" }[m]));
+    }
+
+    async function loadRegistry() {
+      const res = await fetch("/api/models");
+      const data = await res.json();
+      registry = data.datasets || data || {};
+      selectedDatasetKey = selectedDatasetKey || Object.keys(registry)[0];
+      renderDatasets();
+      renderModels();
+    }
+
+    function normalizeLabel(raw) {
+      const s = String(raw ?? "").trim();
+      const low = s.toLowerCase();
+      if (low === "b" || low === "benign") return "Benign";
+      if (low === "s" || low === "malware" || low === "malicious") return "Malware";
+      if (low.includes("adware")) return "Adware";
+      if (low.includes("bank")) return "Banking";
+      if (low.includes("risk")) return "Riskware";
+      if (low === "sms" || low.includes("sms")) return "SMS";
+      return s || "N/A";
+    }
+
+    function labelPillClass(label) {
+      const low = normalizeLabel(label).toLowerCase();
+      if (low === "benign") return "green";
+      if (low === "malware" || low === "banking") return "red";
+      if (low === "adware") return "orange";
+      if (low === "riskware") return "yellow";
+      if (low === "sms") return "purple";
+      return "blue";
+    }
+
+    function labelColor(label) {
+      const low = normalizeLabel(label).toLowerCase();
+      if (low === "benign") return "var(--green)";
+      if (low === "malware" || low === "banking") return "var(--red)";
+      if (low === "adware") return "var(--orange)";
+      if (low === "riskware") return "var(--yellow)";
+      if (low === "sms") return "var(--purple)";
+      return "var(--blue)";
+    }
+
+    function renderDatasets() {
+      datasetGrid.innerHTML = "";
+      for (const [key, ds] of Object.entries(registry)) {
+        const el = document.createElement("div");
+        const task = String(ds.task || "").toLowerCase();
+        const taskCls = task.includes("binary") ? "task-binary" : "task-multiclass";
+        el.className = "card" + (key === selectedDatasetKey ? " sel" : "");
+        el.innerHTML = `
+          <h3>${esc(ds.label)} <span class="task-badge ${taskCls}">${esc(ds.task)}</span></h3>
+          <table class="kv">
+            <tr><td>Model tốt nhất</td><td>${esc(ds.best_model || "N/A")}</td></tr>
+            <tr><td>Features đã chọn</td><td>${esc(ds.n_features_selected ?? "N/A")}</td></tr>
+            <tr><td>Tổng features</td><td>${esc(ds.n_features_total ?? "N/A")}</td></tr>
+          </table>
+        `;
+        el.onclick = () => { selectedDatasetKey = key; selectedAlgoKey = null; renderDatasets(); renderModels(); };
+        datasetGrid.appendChild(el);
+      }
+    }
+
+    function renderModels() {
+      const ds = registry[selectedDatasetKey];
+      modelGrid.innerHTML = "";
+      if (!ds) return;
+      const bestAlgo = ds.algorithms.find(a => a.label === ds.best_model);
+      const bestKey = bestAlgo ? bestAlgo.key : null;
+      for (const algo of ds.algorithms) {
+        if (!selectedAlgoKey && algo.ready) selectedAlgoKey = algo.key;
+        const metrics = algo.metrics || {};
+        const el = document.createElement("div");
+        el.className = "card" + (algo.key === selectedAlgoKey ? " sel" : "");
+        el.innerHTML = `
+          <h3>${esc(algo.label)} ${algo.key === bestKey ? '<span class="chip">BEST</span>' : ""}</h3>
+          <table class="kv">
+            <tr><td>Trạng thái</td><td><span class="pill ${algo.ready ? "green" : "red"}">${algo.ready ? "Sẵn sàng" : "Thiếu file"}</span></td></tr>
+            <tr><td>F1</td><td>${metrics.f1_weighted != null ? Number(metrics.f1_weighted).toFixed(4) : "N/A"}</td></tr>
+            <tr><td>Accuracy</td><td>${metrics.accuracy != null ? Number(metrics.accuracy).toFixed(4) : "N/A"}</td></tr>
+            <tr><td>MCC</td><td>${metrics.mcc != null ? Number(metrics.mcc).toFixed(4) : "N/A"}</td></tr>
+            <tr><td>ROC-AUC</td><td>${metrics.roc_auc != null ? Number(metrics.roc_auc).toFixed(4) : "N/A"}</td></tr>
+          </table>
+        `;
+        el.onclick = () => { if (algo.ready) { selectedAlgoKey = algo.key; renderModels(); } };
+        modelGrid.appendChild(el);
+      }
+    }
+
+    function setStatus(text, kind = "") {
+      statusEl.textContent = text;
+      statusEl.className = kind === "ok" ? "status-ok" : kind === "err" ? "status-err" : "muted";
+    }
+
+    function formatMinutes(ms) {
+      const n = Number(ms);
+      if (!Number.isFinite(n)) return "N/A";
+      return `${(n / 60000).toFixed(3)} phút`;
+    }
+
+    function updateSessionUI() {
+      rerunBtn.disabled = !currentAnalyzeSessionId;
+      if (currentAnalyzeSessionId) {
+        sessionInfoEl.textContent = `Session: ${currentAnalyzeSessionId.slice(0, 8)}...`;
+      } else {
+        sessionInfoEl.textContent = "";
+      }
+    }
+
+    function setProgress(percent, text = "") {
+      const pct = Math.max(0, Math.min(100, Number(percent) || 0));
+      progressWrap.style.display = "block";
+      progressFill.style.width = `${pct}%`;
+      progressPct.textContent = `${pct.toFixed(0)}%`;
+      if (text) progressText.textContent = text;
+    }
+
+    function resetProgress() {
+      progressWrap.style.display = "none";
+      progressFill.style.width = "0%";
+      progressPct.textContent = "0%";
+      progressText.textContent = "Đang chờ analyze...";
+    }
+
+    function renderHistory() {
+      if (!analyzeHistory.length) {
+        historyBody.innerHTML = '<tr><td colspan="7" class="muted">Chưa có lượt analyze nào.</td></tr>';
+        return;
+      }
+      historyBody.innerHTML = analyzeHistory.map(h => `
+        <tr>
+          <td>${esc(h.time)}</td>
+          <td>${esc(h.dataset)}</td>
+          <td>${esc(h.model)}</td>
+          <td>${esc(h.label)}</td>
+          <td>${esc(h.totalMs)}</td>
+          <td>${esc(h.apkCache)}</td>
+          <td>${esc(h.status)}</td>
+        </tr>
+      `).join("");
+    }
+
+    function pushHistory(data, status = "OK", errorMessage = "") {
+      const now = new Date();
+      const timing = data?.timing_ms || {};
+      const cacheInfo = data?.cache_info || {};
+      const row = {
+        time: now.toLocaleTimeString(),
+        dataset: data?.dataset_label || selectedDatasetKey || "N/A",
+        model: data?.algo_label || selectedAlgoKey || "N/A",
+        label: errorMessage || normalizeLabel(data?.prediction?.label) || "N/A",
+        totalMs: formatMinutes(timing.total),
+        apkCache: cacheInfo.apk_cache_hit === true ? "Hit" : cacheInfo.apk_cache_hit === false ? "Miss" : "N/A",
+        status,
+      };
+      analyzeHistory.unshift(row);
+      analyzeHistory = analyzeHistory.slice(0, 15);
+      renderHistory();
+    }
+
+    function itemHtml(title, desc = "", sev = "") {
+      const sevHtml = sev ? `<span class="sev sev-${sev}">${esc(sev)}</span>` : "";
+      return `<div class="item"><div style="display:flex;justify-content:space-between;gap:8px"><strong>${esc(title)}</strong>${sevHtml}</div>${desc ? `<div class="muted" style="margin-top:4px">${esc(desc)}</div>` : ""}</div>`;
+    }
+
+    function fillTable(id, rows) {
+      const el = document.getElementById(id);
+      el.innerHTML = rows.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${v}</td></tr>`).join("");
+    }
+
+    function fillList(id, items, mapper) {
+      const el = document.getElementById(id);
+      if (!items || !items.length) {
+        el.innerHTML = '<div class="muted">Không có dữ liệu.</div>';
+        return;
+      }
+      el.innerHTML = items.map(mapper).join("");
+    }
+
+    function renderResult(data) {
+      resultSec.style.display = "block";
+      const normalizedLabel = normalizeLabel(data.prediction?.label);
+      document.getElementById("predTitle").textContent = `Kết luận: ${normalizedLabel}`;
+      document.getElementById("summaryPills").innerHTML = `
+        <span class="pill blue">${esc(data.dataset_label)}</span>
+        <span class="pill green">${esc(data.algo_label)}</span>
+        <span class="pill ${labelPillClass(normalizedLabel)}">${esc(normalizedLabel)}</span>
+      `;
+
+      const timing = data.timing_ms || {};
+      fillTable("predTable", [
+        ["Request ID", esc(data.request_id || "N/A")],
+        ["Nhãn dự đoán", `<span class="pill ${labelPillClass(normalizedLabel)}">${esc(normalizedLabel)}</span>`],
+        ["Nhãn gốc model", esc(data.prediction.label ?? "N/A")],
+        ["Confidence", data.prediction.confidence != null ? `${data.prediction.confidence}%` : "N/A"],
+        ["Model tốt nhất của dataset", esc(data.dataset_summary.best_model || "N/A")],
+        ["Tổng thời gian", formatMinutes(timing.total)],
+        ["  bundle", formatMinutes(timing.bundle_load)],
+        ["  static", formatMinutes(timing.static_analysis)],
+        ["  strings", formatMinutes(timing.string_extraction)],
+        ["  map", formatMinutes(timing.feature_mapping)],
+        ["  predict", formatMinutes(timing.prediction)],
+      ]);
+
+      const mm = data.model_metrics || {};
+      fillTable("modelTable", [
+        ["Accuracy", mm.accuracy != null ? Number(mm.accuracy).toFixed(4) : "N/A"],
+        ["F1 weighted", mm.f1_weighted != null ? Number(mm.f1_weighted).toFixed(4) : "N/A"],
+        ["Precision", mm.precision_weighted != null ? Number(mm.precision_weighted).toFixed(4) : "N/A"],
+        ["Recall", mm.recall_weighted != null ? Number(mm.recall_weighted).toFixed(4) : "N/A"],
+        ["MCC", mm.mcc != null ? Number(mm.mcc).toFixed(4) : "N/A"],
+        ["ROC-AUC", mm.roc_auc != null ? Number(mm.roc_auc).toFixed(4) : "N/A"],
+      ]);
+
+      const probs = data.prediction.probabilities || [];
+      const probList = document.getElementById("probList");
+      probList.innerHTML = probs.length ? probs.map(p => `
+        <div class="prob-row">
+          <div style="width:140px"><span class="pill ${labelPillClass(p.label)}">${esc(normalizeLabel(p.label))}</span></div>
+          <div class="bar"><div class="fill" style="width:${Math.max(0, Math.min(100, p.prob * 100))}%;background:${labelColor(p.label)}"></div></div>
+          <div style="width:70px;text-align:right">${(p.prob * 100).toFixed(2)}%</div>
+        </div>`).join("") : '<div class="muted">Model này không hỗ trợ predict_proba.</div>';
+
+      const feat = data.features || {};
+      fillTable("featureTable", [
+        ["Base feature space", esc(feat.n_base_features ?? "N/A")],
+        ["Selected features", esc(feat.n_selected_features ?? "N/A")],
+        ["Features activated", esc(feat.features_activated ?? "N/A")],
+        ["Tỷ lệ khớp", feat.match_ratio_pct != null ? `${feat.match_ratio_pct}%` : "N/A"],
+        ["Exact matches", esc(feat.exact_matches ?? "N/A")],
+        ["Fuzzy matches", esc(feat.fuzzy_matches ?? "N/A")],
+      ]);
+      document.getElementById("matchedFeatures").innerHTML = (feat.matched_features || []).slice(0, 30).map(f => `<span class="ftag">${esc(f)}</span>`).join("");
+
+      const sa = data.static_analysis || {};
+      fillTable("metaTable", [
+        ["Tên file", esc(sa.meta?.filename || "N/A")],
+        ["Package", esc(sa.meta?.package || "N/A")],
+        ["Version name", esc(sa.meta?.version_name || "N/A")],
+        ["Version code", esc(sa.meta?.version_code || "N/A")],
+        ["Min SDK", esc(sa.meta?.min_sdk || "N/A")],
+        ["Target SDK", esc(sa.meta?.target_sdk || "N/A")],
+        ["Risk score", esc(sa.risk_score ?? "N/A")],
+      ]);
+
+      fillList("riskList", sa.risk_indicators || [], x => itemHtml(x.name || x.type, x.desc || "", x.severity || ""));
+      fillList("permDanger", sa.permissions?.dangerous || [], x => itemHtml(x.short || x.full, x.desc || "", x.severity || ""));
+      fillList("permNormal", sa.permissions?.normal || [], x => itemHtml(x.short || x.full, x.desc || "", x.severity || ""));
+      fillList("apiList", sa.api_calls?.sensitive || [], x => itemHtml(x.api, `${x.cat || ""} ${x.desc || ""}`.trim(), x.severity || ""));
+      fillList("actList", sa.components?.activities || [], x => itemHtml(x.short || x.full, x.role || ""));
+      fillList("svcList", sa.components?.services || [], x => itemHtml(x.short || x.full, x.role || ""));
+      fillList("rcvList", sa.components?.receivers || [], x => itemHtml(x.short || x.full, x.role || ""));
+      fillList("prvList", sa.components?.providers || [], x => itemHtml(x.short || x.full, x.role || ""));
+      document.getElementById("fileList").innerHTML = (sa.file_list || []).length ? (sa.file_list || []).map(f => `<div>${esc(f)}</div>`).join("") : '<div class="muted">Không có dữ liệu.</div>';
+      document.getElementById("rawJson").textContent = JSON.stringify(data, null, 2);
+    }
+
+    drop.onclick = () => apkInput.click();
+    drop.ondragover = (e) => { e.preventDefault(); };
+    drop.ondrop = (e) => {
+      e.preventDefault();
+      const file = e.dataTransfer.files?.[0];
+      if (file) {
+        setFile(file);
+        runAnalyze({ reuseSession: false });
+      }
+    };
+    apkInput.onchange = () => {
+      if (apkInput.files?.[0]) setFile(apkInput.files[0]);
+    };
+
+    function setFile(file) {
+      selectedFile = file;
+      currentAnalyzeSessionId = null;
+      updateSessionUI();
+      apkInfo.textContent = `${file.name} (${Math.round(file.size / 1024)} KB)`;
+    }
+
+    async function runAnalyze({ reuseSession = false } = {}) {
+      if (!selectedDatasetKey || !selectedAlgoKey) {
+        setStatus("Chưa chọn dataset/model.", "err");
+        return;
+      }
+      if (!reuseSession && !selectedFile) {
+        setStatus("Chưa chọn file APK.", "err");
+        return;
+      }
+      if (reuseSession && !currentAnalyzeSessionId) {
+        setStatus("Chưa có analyze session để chạy lại.", "err");
+        return;
+      }
+
+      if (reuseSession) {
+        setStatus("Đang chạy lại với model khác (không upload lại file)...");
+        setProgress(3, "Đang dùng lại APK trong session...");
+      } else {
+        setStatus("Đang gửi APK lên server...");
+        setProgress(3, "Đang gửi APK lên server...");
+      }
+
+      runBtn.disabled = true;
+      rerunBtn.disabled = true;
+      const form = new FormData();
+      form.append("dataset_key", selectedDatasetKey);
+      form.append("algo_key", selectedAlgoKey);
+      form.append("stream", "1");
+      if (reuseSession) {
+        form.append("analyze_session_id", currentAnalyzeSessionId);
+      } else {
+        form.append("file", selectedFile);
+      }
+
+      try {
+        const res = await fetch("/api/analyze", { method: "POST", body: form });
+        const contentType = (res.headers.get("content-type") || "").toLowerCase();
+        if (!res.ok) {
+          let errMsg = "Request failed";
+          try {
+            const data = await res.json();
+            errMsg = data.error || errMsg;
+          } catch (_) {}
+          setStatus(errMsg, "err");
+          pushHistory(null, "ERROR", errMsg);
+          return;
+        }
+
+        if (!contentType.includes("application/x-ndjson")) {
+          const data = await res.json();
+          const mins = data.timing_ms && data.timing_ms.total != null ? ` (${formatMinutes(data.timing_ms.total)})` : "";
+          setStatus("Phân tích thành công." + mins, "ok");
+          currentAnalyzeSessionId = data.analyze_session_id || currentAnalyzeSessionId;
+          updateSessionUI();
+          pushHistory(data, "OK");
+          renderResult(data);
+          return;
+        }
+
+        const reader = res.body?.getReader();
+        if (!reader) {
+          throw new Error("Không đọc được stream response.");
+        }
+
+        const decoder = new TextDecoder();
+        let buf = "";
+        let finalData = null;
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buf += decoder.decode(value, { stream: true });
+          const lines = buf.split("\n");
+          buf = lines.pop() || "";
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) continue;
+
+            let evt = null;
+            try {
+              evt = JSON.parse(trimmed);
+            } catch (_) {
+              continue;
+            }
+
+            if (evt.event === "progress") {
+              const elapsed = evt.elapsed_ms != null ? ` (${formatMinutes(evt.elapsed_ms)})` : "";
+              setStatus(`${evt.message || "Đang xử lý..."}${elapsed}`);
+              const stepText = (evt.step_index && evt.total_steps)
+                ? `Bước ${evt.step_index}/${evt.total_steps}`
+                : "Đang xử lý";
+              setProgress(evt.progress_pct ?? 0, `${stepText} - ${evt.step || ""}`);
+            } else if (evt.event === "error") {
+              throw new Error(evt.message || "Analyze failed");
+            } else if (evt.event === "done") {
+              finalData = evt.data || null;
+            }
+          }
+        }
+
+        if (!finalData) {
+          throw new Error("Không nhận được kết quả từ stream.");
+        }
+
+        const mins = finalData.timing_ms && finalData.timing_ms.total != null ? ` (${formatMinutes(finalData.timing_ms.total)})` : "";
+        setStatus("Phân tích thành công." + mins, "ok");
+        setProgress(100, "Hoàn tất phân tích APK");
+        currentAnalyzeSessionId = finalData.analyze_session_id || currentAnalyzeSessionId;
+        updateSessionUI();
+        pushHistory(finalData, "OK");
+        renderResult(finalData);
+      } catch (err) {
+        setStatus(String(err), "err");
+        setProgress(100, "Analyze thất bại");
+        pushHistory(null, "ERROR", String(err));
+      } finally {
+        runBtn.disabled = false;
+        rerunBtn.disabled = !currentAnalyzeSessionId;
+      }
+    }
+
+    runBtn.onclick = () => runAnalyze({ reuseSession: false });
+    rerunBtn.onclick = () => runAnalyze({ reuseSession: true });
+    resetProgress();
+    updateSessionUI();
+    renderHistory();
+
+    document.querySelectorAll(".tab").forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+        document.querySelectorAll(".tabc").forEach(x => x.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+      };
+    });
+
+    loadRegistry();
+  </script>
+</body>
+</html>
+
